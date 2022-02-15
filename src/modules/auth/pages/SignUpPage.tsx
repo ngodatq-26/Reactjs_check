@@ -22,7 +22,16 @@ const SignUpPage = ()=>{
     const [errorMessage, setErrorMessage] = useState('');
     const [locations,setLocations] = useState([]);
     
+    const [states,setStates] = React.useState([]);
+
     
+    const getStates = React.useCallback(async(pid : string)=>{
+        const json = await dispatch(fetchThunk(API_PATHS.getLocation + `?pid=${pid}` ,'get'));
+        if(json?.code === RESPONSE_STATUS_SUCCESS) {
+            setStates(json.data);
+            return ;
+        }
+    },[]);
 
     const getLocations = React.useCallback(async()=>{
         setLoading(true);
@@ -48,17 +57,19 @@ const SignUpPage = ()=>{
 
             fetchThunk(API_PATHS.signUP,'post',values)
         );
-
+        
+        
         setLoading(false);
 
-        if(json?.code === RESPONSE_STATUS_SUCCESS) {
+        if(json?.code != RESPONSE_STATUS_SUCCESS ) {
+            setErrorMessage(getErrorMessageResponse(json));
+            return false ;
+        }  else {
             console.log(json.data);
             alert('chúc mừng bạn đã đăng ký thành công!!!');
             dispatch(replace(ROUTES.login));
-            return;
-        }
-        
-        setErrorMessage(getErrorMessageResponse(json))
+            return true;
+        }  
     },[dispatch]);
 
     return (
@@ -72,7 +83,7 @@ const SignUpPage = ()=>{
         }}
         >
             <img src={logo} style={{maxWidth :'250px', margin :'32px'}} />
-            <SignUpForm onSignUp ={onSignUp} errorMessage ={errorMessage} loading ={loading} locations={locations}  />
+            <SignUpForm onSignUp ={onSignUp} errorMessage ={errorMessage} loading ={loading} locations={locations} states={states} getStates = {getStates}  />
         </div>
     );
 }

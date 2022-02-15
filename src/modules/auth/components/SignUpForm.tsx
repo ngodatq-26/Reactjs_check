@@ -17,47 +17,37 @@ interface Props {
     errorMessage : string;
     loading : boolean;
     locations : Array<ILocationParams>;
+    states : Array<ILocationParams>;
+    getStates (pid: string) : void
 }
 
 const SignUpForm = (props : Props) =>{
-    const {onSignUp,errorMessage,loading,locations} = props;
+    const {onSignUp,errorMessage,loading,locations,states,getStates} = props;
     const dispatch = useDispatch<ThunkDispatch<AppState, null, Action<string>>>();
     const [formValues,setFormValues] = React.useState<ISignUpParams>({ email : '', password :'',repeatPassword : '',name :'',gender : '',region :'',state : ''});
     const [validate,setValidate] = React.useState<ISignUpParams>();
     
-    const [states,setStates] = React.useState([]);
-
-    const getStates = React.useCallback(async(values : ISignUpParams)=>{
-        const json = await dispatch(fetchThunk(API_PATHS.getLocation + `?pid=${values.region}` ,'get'));
-        
-        if(json?.code === RESPONSE_STATUS_SUCCESS) {
-            setStates(json.data);
-            return ;
-        }
-    },[]);
-
-    React.useEffect(()=>{
-        getStates(formValues)
-    },[formValues.region])
     
-    const onSubmit = React.useCallback(() =>{
-          const validate = validateSignUp(formValues);
-          setValidate(validate);
-          if(validSignUp(validate)) {
-              return;
-          }
-          onSignUp(formValues);
-          
-    },[formValues,onSignUp])
+    const onSubmit = ()=>{
+        const validate = validateSignUp(formValues);
+        setValidate(validate);
+        if(!validSignUp(validate)) {
+            console.log(validSignUp(validate))
+            return; 
+        }
+            onSignUp(formValues)
+        
+    }
 
+    
     const GENDER = [
         {
             "label" : "male",
-            "value" : "Nam"
+            "value" : "male"
         },
         {
             "label" : "female",
-            "value" : "Nữ"
+            "value" : "female"
         }
     ]
 
@@ -69,7 +59,7 @@ const SignUpForm = (props : Props) =>{
         ];
         GENDER.map((g : IGenderParams ,index : number) =>{
             arrGender.push (
-                <option value = {g.value} key={index}> 
+                <option value= {g.value} key={index}> 
                     {g.label}
                 </option>
             );
@@ -85,7 +75,7 @@ const SignUpForm = (props : Props) =>{
         ];
         locations.map((l : ILocationParams,index : number)=>{
             arrRegion.push(
-                <option value ={l.id} key={index}>
+                <option value={l.id} key={index}>
                     {l.name}
                 </option>
             );
@@ -100,19 +90,18 @@ const SignUpForm = (props : Props) =>{
             </option>
         ];
 
-        states.map((states : ILocationParams,index : number)=>{
+        
+        states.map((state : ILocationParams,index : number)=>{
 
             arrState.push(
-                <option value ={states.id} key={index}>
-                    {states.name}
+                <option value={state.id} key={index}>
+                    {state.name}
                 </option>
             );
         }) ;
         return arrState;
     };
 
-    
-    console.log('ok')
     return(<form
         autoComplete = "off"
         style={{ maxWidth: '560px', width: '100%',paddingTop :'50px'}}
@@ -120,8 +109,8 @@ const SignUpForm = (props : Props) =>{
         className ="row g-3 needs-validation"
         onSubmit = {(e) =>{
             e.preventDefault();
-            onSubmit();
-        }}
+            onSubmit()
+}}
     >
         {
         !!errorMessage &&(<div className='alert alert-danger' role ="alert" style={{width : '100%'}}>
@@ -134,8 +123,8 @@ const SignUpForm = (props : Props) =>{
                 <FormattedMessage id="email" />
             </label>
             <input className ="form-control"
-                   type = "text"
-                   value = {formValues.email}
+                   type = "email"
+                   value= {formValues.email}
                    id="SignUpEmail"
                    onChange = {(e) =>{
                        setFormValues({...formValues,email : e.target.value})
@@ -156,8 +145,8 @@ const SignUpForm = (props : Props) =>{
                 <FormattedMessage id="password" />
             </label>
             <input className ="form-control"
-                   type = "text"
-                   value = {formValues.password}
+                   type = "password"
+                   value= {formValues.password}
                    id="SignUpPassword"
                    onChange = {(e) =>{
                        setFormValues({...formValues,password : e.target.value})
@@ -177,8 +166,8 @@ const SignUpForm = (props : Props) =>{
                 <FormattedMessage id="repeatPassword" />
             </label>
             <input className ="form-control"
-                   type = "text"
-                   value = {formValues.repeatPassword}
+                   type = "password"
+                   value= {formValues.repeatPassword}
                    id="SignUpRepeatPassword"
                    onChange = {(e) =>{
                        setFormValues({...formValues,repeatPassword : e.target.value})
@@ -200,7 +189,7 @@ const SignUpForm = (props : Props) =>{
             </label>
             <input className ="form-control"
                    type = "text"
-                   value = {formValues.name}
+                   value= {formValues.name}
                    id="SignUpName"
                    onChange = {(e) =>{
                        setFormValues({...formValues,name : e.target.value})
@@ -221,7 +210,7 @@ const SignUpForm = (props : Props) =>{
                 <FormattedMessage id="gender" />
             </label>
             <select className ="form-control"
-                   value = {formValues.gender}
+                   value= {formValues.gender}
                    id="SignUpGender"
                    onChange = {(e) =>{
                        setFormValues({...formValues,gender : e.target.value})
@@ -242,10 +231,11 @@ const SignUpForm = (props : Props) =>{
                 <FormattedMessage id="region" />
             </label>
             <select className ="form-control"
-                   value = {formValues.region}
+                   value= {formValues.region}
                    id="SignUpRegion"
                    onChange = {(e) =>{
                        setFormValues({...formValues,region : e.target.value})
+                       getStates(e.target.value)
                    }}
             >
                 {renderRegion()}
@@ -265,7 +255,7 @@ const SignUpForm = (props : Props) =>{
                 <FormattedMessage id="state" />
             </label>
             <select className ="form-control"
-                   value = {formValues.state}
+                   value= {formValues.state}
                    id="SignUpState"
                    onChange = {(e) =>{
                        setFormValues({...formValues,state : e.target.value})
